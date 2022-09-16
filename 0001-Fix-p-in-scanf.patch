@@ -1,0 +1,52 @@
+From bc1d8021352df5c302192641b38e88e9fd319106 Mon Sep 17 00:00:00 2001
+From: Gabriel Ravier <gabravier@gmail.com>
+Date: Wed, 14 Sep 2022 16:01:09 +0200
+Subject: [PATCH] Fix %p in scanf
+To: dietlibc@fefe.de
+
+%p was originally storing pointers in the wrong size (storing as if
+they were ints), meaning code such as:
+
+ #include <stdio.h>
+
+int main()
+{
+    void *ptr = (void *)0x123456789ABCDEF0;
+    char buffer[100];
+    void *new_ptr;
+
+    snprintf(buffer, sizeof(buffer), "%p", ptr);
+    sscanf(buffer, "%p", &new_ptr);
+    printf("%p %p\n", ptr, new_ptr);
+}
+
+would not behave properly, with it printing
+
+0x123456789abcdef0 0x9abcdef0
+
+on my machine, instead of
+
+0x123456789abcdef0 0x123456789abcdef0
+
+This patch fixes this by storing into longs, which should hopefully
+work on all dietlibc platforms
+---
+ dietlibc/lib/__v_scanf.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/dietlibc/lib/__v_scanf.c b/dietlibc/lib/__v_scanf.c
+index 5540d26f..64e50b4a 100644
+--- a/dietlibc/lib/__v_scanf.c
++++ b/dietlibc/lib/__v_scanf.c
+@@ -120,6 +120,8 @@ in_scan:
+ 
+ 	/* scan for integer / strtol reimplementation ... */
+ 	case 'p':
++          flag_long=1; /* hopefully this corresponds to pointers on all platforms... */
++          /* fall through */
+ 	case 'X':
+ 	case 'x':
+ 	  _div+=6;
+-- 
+2.37.3
+

@@ -1,0 +1,30 @@
+From f0a18bc34e3a97c97cea2d89097700c69cb53f8f Mon Sep 17 00:00:00 2001
+From: Gabriel Ravier <gabravier@gmail.com>
+Date: Mon, 12 Sep 2022 14:24:23 +0200
+Subject: [PATCH] Fix %# not working properly
+
+On dietlibc, %# accidentally decreases flag_long (this appears to be
+an accident, based on how the code changed when adding the z length
+modifier and then moving it to be analogous to j/l), which makes it so
+that something like printf("%#x", 0x1234abcd) prints 0xabcd instead of
+the full 0x1234abcd
+---
+ dietlibc/lib/__v_printf.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/dietlibc/lib/__v_printf.c b/dietlibc/lib/__v_printf.c
+index 37238b3e..e7cccef1 100644
+--- a/dietlibc/lib/__v_printf.c
++++ b/dietlibc/lib/__v_printf.c
+@@ -83,7 +83,7 @@ inn_printf:
+       /* FLAGS */
+       case '#':
+ 	flag_hash=-1;
+-	/* fall through */
++        goto inn_printf;
+ 
+       case 'h':
+ 	--flag_long;
+-- 
+2.37.3
+

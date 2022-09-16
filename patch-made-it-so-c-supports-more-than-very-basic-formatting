@@ -1,0 +1,47 @@
+Return-Path: <gabravier@gmail.com>
+Received: from fedora.int.ionis-it.com ([185.246.211.72])
+        by smtp.gmail.com with ESMTPSA id w1-20020a5d6081000000b0022a2dbc80fdsm10432009wrt.10.2022.09.13.04.43.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 13 Sep 2022 04:43:54 -0700 (PDT)
+From: Gabriel Ravier <gabravier@gmail.com>
+To: dietlibc@fefe.de
+Cc: Gabriel Ravier <gabravier@gmail.com>
+Subject: [PATCH] Made it so that %c supports more than very basic formatting
+Date: Tue, 13 Sep 2022 13:43:47 +0200
+Message-Id: <20220913114347.1295082-1-gabravier@gmail.com>
+X-Mailer: git-send-email 2.37.3
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+
+Previously, dietlibc would simply not print anything more complicated than %c correctly
+
+This patch makes an initial implementation of such characteristics that passes all the tests I put it through (though my C testsuite isn't *that* big as of yet, but still, it looks like implementing %c like this works out pretty well).
+---
+ dietlibc/lib/__v_printf.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/dietlibc/lib/__v_printf.c b/dietlibc/lib/__v_printf.c
+index f2456855..2a8cab61 100644
+--- a/dietlibc/lib/__v_printf.c
++++ b/dietlibc/lib/__v_printf.c
+@@ -169,10 +169,14 @@ inn_printf:
+ 	if (preci>MAX_WIDTH) return -1;
+ 	goto inn_printf;
+ 
+-      /* print a char or % */
++      /* print a char */
+       case 'c':
+-	ch=(char)va_arg(arg_ptr,int);
+-	/* fall through */
++	buf[0]=(char)va_arg(arg_ptr,int);
++        sz=1;
++        s=buf;
++        goto print_out;
++
++      /* print a % */
+       case '%':
+ 	B_WRITE(fn,&ch,1);
+ 	++len;
+-- 
+2.37.3
+

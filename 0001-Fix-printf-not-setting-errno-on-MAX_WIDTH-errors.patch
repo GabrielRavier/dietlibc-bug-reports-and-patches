@@ -1,0 +1,58 @@
+From 75235cc8180355d826d995f7f1454113d0a4992f Mon Sep 17 00:00:00 2001
+From: Gabriel Ravier <gabravier@gmail.com>
+Date: Fri, 16 Sep 2022 11:39:34 +0200
+Subject: [PATCH] Fix printf not setting errno on MAX_WIDTH errors
+To: dietlibc@fefe.de
+
+It appears that certain programs expect that something such as
+`printf("%.10000000d", 1)` shall either return 10000000 or set errno
+to ENOMEM.
+
+This patch makes it so that this is the case
+---
+ dietlibc/lib/__v_printf.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
+
+diff --git a/dietlibc/lib/__v_printf.c b/dietlibc/lib/__v_printf.c
+index f130da9b..29c610bb 100644
+--- a/dietlibc/lib/__v_printf.c
++++ b/dietlibc/lib/__v_printf.c
+@@ -137,7 +137,10 @@ inn_printf:
+       case '9':
+ 	if(flag_dot) return -1;
+ 	width=strtoul(format-1,(char**)&s,10);
+-	if (width>MAX_WIDTH) return -1;
++	if (width>MAX_WIDTH) {
++          errno = ENOMEM;
++          return -1;
++        }
+ 	if (ch=='0' && !flag_left) padwith='0';
+ 	format=s;
+ 	goto inn_printf;
+@@ -152,7 +155,10 @@ inn_printf:
+ 	    flag_left=1;
+ 	    tmp=-tmp;
+ 	  }
+-	  if ((width=(unsigned long)tmp)>MAX_WIDTH) return -1;
++	  if ((width=(unsigned long)tmp)>MAX_WIDTH) {
++            errno = ENOMEM;
++            return -1;
++          }
+ 	  goto inn_printf;
+ 	}
+ 	/* fall through */
+@@ -170,7 +176,10 @@ inn_printf:
+ 	  preci=tmp<0?0:tmp;
+ 	  format=s;
+ 	}
+-	if (preci>MAX_WIDTH) return -1;
++	if (preci>MAX_WIDTH) {
++          errno = ENOMEM;
++          return -1;
++        }
+ 	goto inn_printf;
+ 
+       /* print a char */
+-- 
+2.37.3
+

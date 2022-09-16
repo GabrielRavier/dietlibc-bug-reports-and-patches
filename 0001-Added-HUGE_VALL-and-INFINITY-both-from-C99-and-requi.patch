@@ -1,0 +1,26 @@
+From fc67417bd7f95abeeb2cc62c4fa5d825b9a6c57d Mon Sep 17 00:00:00 2001
+From: Gabriel Ravier <gabravier@gmail.com>
+Date: Sun, 11 Sep 2022 23:13:05 +0200
+Subject: [PATCH] Added HUGE_VALL and INFINITY, both from C99 and required for
+ compliance to it
+
+---
+ dietlibc/include/math.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/dietlibc/include/math.h b/dietlibc/include/math.h
+index 8027e22b..735b71f1 100644
+--- a/dietlibc/include/math.h
++++ b/dietlibc/include/math.h
+@@ -131,6 +131,8 @@ float copysignf(float value, float sign) __attribute__((__const__));
+   (__extension__ \
+    ((union { unsigned int __i; float __f; }) \
+     { __i: 0x7f800000UL }).__f)
++#define HUGE_VALL (__builtin_huge_vall())
++#define INFINITY HUGE_VALF
+ 
+ #ifdef _GNU_SOURCE
+ void sincos(double x, double* sinx, double* cosx);
+-- 
+2.37.3
+

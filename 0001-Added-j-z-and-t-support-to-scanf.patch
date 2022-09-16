@@ -1,0 +1,53 @@
+From 50d9b892fc0aa6b5c2142bd4ab8f154c11374925 Mon Sep 17 00:00:00 2001
+From: Gabriel Ravier <gabravier@gmail.com>
+Date: Wed, 14 Sep 2022 13:27:18 +0200
+Subject: [PATCH] Added %j, %z and %t support to scanf
+To: dietlibc@fefe.de
+
+The C standard states:
+
+j Specifies that a following b, d, i, o, u, x, X, or n conversion
+specifier applies to an argument with type pointer to intmax_t or
+uintmax_t.
+
+z Specifies that a following b, d, i, o, u, x, X, or n conversion
+specifier applies to an argument with type pointer to size_t or the
+corresponding signed integer type
+
+t Specifies that a following b, d, i, o, u, x, X, or n conversion
+specifier applies to an argument with type pointer to ptrdiff_t or the
+corresponding unsigned integer type.
+
+This patch accordingly implements these (with the same #if tests as
+done in __v_printf.c) and makes it so software relying on these flags works
+properly
+---
+ dietlibc/lib/__v_scanf.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/dietlibc/lib/__v_scanf.c b/dietlibc/lib/__v_scanf.c
+index bdb7c5a1..5540d26f 100644
+--- a/dietlibc/lib/__v_scanf.c
++++ b/dietlibc/lib/__v_scanf.c
+@@ -85,10 +85,18 @@ in_scan:
+ 	case 'h':
+ 	  flag_half=1;
+ 	  goto in_scan;
++#if __WORDSIZE == 64
++        case 'j':
++#endif
++        case 'z':
++        case 't':
+ 	case 'l':
+ 	  if (flag_long) flag_longlong=1;
+ 	  flag_long=1;
+ 	  goto in_scan;
++#if __WORDSIZE != 64
++        case 'j':
++#endif
+ 	case 'q':
+ 	case 'L':
+ 	  flag_longlong=1;
+-- 
+2.37.3
+

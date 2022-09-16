@@ -1,0 +1,53 @@
+Message-ID: <7ac022b2-c187-fa3f-b550-0b4b7487438c@gmail.com>
+Date: Sun, 11 Sep 2022 13:20:10 +0200
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.2.1
+Subject: Bug report: printf(%G, 1234567.8) does not print correctly and fails
+ to null-terminate an internal buffer
+Content-Language: en-US
+References: <16ff88a0-ac0f-5695-895a-3c3fa82d530e@gmail.com>
+To: dietlibc@fefe.de
+From: Gabriel Ravier <gabravier@gmail.com>
+In-Reply-To: <16ff88a0-ac0f-5695-895a-3c3fa82d530e@gmail.com>
+X-Forwarded-Message-Id: <16ff88a0-ac0f-5695-895a-3c3fa82d530e@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+
+Executing the following code:
+
+#include <stdio.h>
+#include <stdint.h>
+
+// Here to make sure the printf doesn't just happen to appear to kind of 
+work because there was a random \0 on the stack at the right place
+static void
+put_junk_on_stack(void)
+{
+     static uint32_t junk = 0xDEADBEEF;
+     uint32_t buf[512];
+     size_t i;
+
+     for (i = 0; i < sizeof(buf) / sizeof(buf[0]); i++)
+         buf[i] = junk;
+}
+
+int main()
+{
+     put_junk_on_stack();
+     printf("%G\n", 1234567.8);
+}
+
+on my machine results in this with glibc:
+
+1.23457E+06
+
+and this with dietlibc:
+
+1234567.���ﾭ�ﾭ�ﾭ�ﾭ�ﾭ�ﾭ�ﾭ�ﾭ�ﾭ�ﾭ�ﾭ�ﾭ�ﾭ�ﾭ�ﾭ�ﾭ�ﾭ�ﾭ�ﾭ�ﾭ�ﾭ�ﾭ�ﾭ�ﾭ�ﾭ�ﾭ�ﾭ�ﾭ�ﾭ�ﾭ�ﾭGTv�
+
+which implies that dietlibc doesn't just fail to format the number 
+correctly but also does not properly null-terminate some internal 
+buffer, effectively giving arbitrary read capacity upon trying to print 
+certain floating point numbers with %G.
+

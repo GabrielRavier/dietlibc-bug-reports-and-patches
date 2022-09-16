@@ -1,0 +1,105 @@
+Content-Type: multipart/alternative;
+ boundary="------------OyzwHEVrAbtC31n4dRH3aXd6"
+Message-ID: <1af479be-9f9a-638d-4298-29e90b5fb9d2@gmail.com>
+Date: Mon, 12 Sep 2022 21:53:45 +0200
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.2.1
+Content-Language: en-US
+To: dietlibc@fefe.de
+From: Gabriel Ravier <gabravier@gmail.com>
+Subject: Bug report: printf # flag is broken
+
+This is a multi-part message in MIME format.
+--------------OyzwHEVrAbtC31n4dRH3aXd6
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+
+Compiling and running the following program:
+
+#include <stdio.h>
+
+int main()
+{
+     printf("%#012x\n", 0);
+}
+
+results in dietlibc printing 0x0000000000, whereas glibc prints 
+000000000000. glibc's output is the correct one, as the standard states 
+that:
+
+> # [...]  For x (or X) conversion, a **nonzero** result has 0x (or 0X) prefixed 
+to it.
+
+meaning that dietlibc should not have written the beginning as 
+containing 0x.
+
+A similar problem occurs with %#o, where:
+
+#include <stdio.h>
+
+int main()
+{
+     printf("%#o\n", 0);
+}
+
+should output 0 but instead outputs 00 on dietlibc, even though the 
+standard states that the precision of the output shall only be increased 
+if necessary to output the beginning 0 (which it is not in this case).
+
+--------------OyzwHEVrAbtC31n4dRH3aXd6
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+<html>
+  <head>
+
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  </head>
+  <body>
+    <p>Compiling and running the following program:</p>
+    <p>#include &lt;stdio.h&gt;<br>
+      <br>
+      int main()<br>
+      {<br>
+          printf("%#012x\n", 0);<br>
+      }<br>
+    </p>
+    <p>results in dietlibc printing 0x0000000000, whereas glibc prints
+      000000000000. glibc's output is the correct one, as the standard
+      states that:</p>
+    <p><span style="left: 736.473px; top: 370.644px; font-size:
+        16.6043px; font-family: sans-serif; transform:
+        scaleX(0.959451);" role="presentation" dir="ltr">&gt; # [...]
+        For x (or X) conversion, a **nonzero** result has 0x (or 0X)
+        prefixed to it. <br>
+      </span></p>
+    <p><span style="left: 736.473px; top: 370.644px; font-size:
+        16.6043px; font-family: sans-serif; transform:
+        scaleX(0.959451);" role="presentation" dir="ltr">meaning that
+        dietlibc should not have written the beginning as containing 0x.</span></p>
+    <p><span style="left: 736.473px; top: 370.644px; font-size:
+        16.6043px; font-family: sans-serif; transform:
+        scaleX(0.959451);" role="presentation" dir="ltr">A similar
+        problem occurs with %#o, where:</span></p>
+    <p><span style="left: 736.473px; top: 370.644px; font-size:
+        16.6043px; font-family: sans-serif; transform:
+        scaleX(0.959451);" role="presentation" dir="ltr">#include
+        &lt;stdio.h&gt;<br>
+        <br>
+        int main()<br>
+        {<br>
+            printf("%#o\n", 0);<br>
+        }<br>
+      </span></p>
+    <p><span style="left: 736.473px; top: 370.644px; font-size:
+        16.6043px; font-family: sans-serif; transform:
+        scaleX(0.959451);" role="presentation" dir="ltr">should output 0
+        but instead outputs 00 on dietlibc, even though the standard
+        states that the precision of the output shall only be increased
+        if necessary to output the beginning 0 (which it is not in this
+        case).</span></p>
+  </body>
+</html>
+
+--------------OyzwHEVrAbtC31n4dRH3aXd6--

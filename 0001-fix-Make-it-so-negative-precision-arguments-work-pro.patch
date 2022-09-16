@@ -1,0 +1,40 @@
+From bd9a804c678211cf37a3708d2f9918429f0611ec Mon Sep 17 00:00:00 2001
+From: Gabriel Ravier <gabravier@gmail.com>
+Date: Sun, 11 Sep 2022 23:08:31 +0200
+Subject: [PATCH] fix: Make it so negative precision arguments work properly
+
+The C standard states:
+> A negative precision argument is taken as if the precision were omitted.
+
+This patch thus makes it so that it is interpreted as such instead of being interpreted as a precision of 0.
+
+This fixes code such as this:
+
+#include <stdio.h>
+
+int main()
+{
+    printf("%.*f\n", -2, 2.7182818);
+}
+
+Which would previously print 3, but now print 2.718282, as is mandated by the standard
+---
+ dietlibc/lib/__v_printf.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/dietlibc/lib/__v_printf.c b/dietlibc/lib/__v_printf.c
+index bb3aa88a..f901f817 100644
+--- a/dietlibc/lib/__v_printf.c
++++ b/dietlibc/lib/__v_printf.c
+@@ -154,6 +154,8 @@ inn_printf:
+ 	if (*format=='*') {
+ 	  int tmp=va_arg(arg_ptr,int);
+ 	  preci=tmp<0?0:tmp;
++          if (tmp<0)
++            flag_dot=0;
+ 	  ++format;
+ 	} else {
+ 	  long int tmp=strtol(format,(char**)&s,10);
+-- 
+2.37.3
+

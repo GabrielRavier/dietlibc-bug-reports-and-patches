@@ -1,0 +1,24 @@
+Message-ID: <a08fc2fb-7267-1cb8-ad73-601a3e57e12d@gmail.com>
+Date: Mon, 12 Sep 2022 08:07:44 +0200
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.2.1
+Content-Language: en-US
+To: dietlibc@fefe.de
+From: Gabriel Ravier <gabravier@gmail.com>
+Subject: Bug report: printf(%f, 1.7976931348623157e+308) crashes with a stack
+ overflow
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+
+#include <stdio.h>
+
+int main()
+{
+     printf("%f\n", 1.7976931348623157e+308);
+}
+
+Running this code on my machine with glibc runs fine, but under 
+dietlibc, it segfaults with an impressive 52314-long function backtrace 
+involving __dtostr calling itself 52309 times in an infinite recursion loop.
+

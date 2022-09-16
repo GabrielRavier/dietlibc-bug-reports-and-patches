@@ -1,0 +1,27 @@
+From 52bfc5d3c4afd8a7ec030ee1e6276eb022ff58c9 Mon Sep 17 00:00:00 2001
+From: Gabriel Ravier <gabravier@gmail.com>
+Date: Sun, 11 Sep 2022 23:58:35 +0200
+Subject: [PATCH] Implemented ' flag character in printf
+
+POSIX mandates that the ' character be usable as a flag character in printf, specifying that it shall make it so the integer portion of decimal conversions shall be formatted with thousands' grouping character. Since dietlibc has doesn't have any, the flag can be safely ignored.
+---
+ dietlibc/lib/__v_printf.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/dietlibc/lib/__v_printf.c b/dietlibc/lib/__v_printf.c
+index f901f817..37238b3e 100644
+--- a/dietlibc/lib/__v_printf.c
++++ b/dietlibc/lib/__v_printf.c
+@@ -106,6 +106,9 @@ inn_printf:
+ 	++flag_long;
+ 	goto inn_printf;
+ 
++      case '\'':        /* Part of POSIX, but we don't actually need to do anything because the thousands grouping characters is nothing under dietlibc */
++        goto inn_printf;
++
+       case '-':
+ 	flag_left=1;
+ 	goto inn_printf;
+-- 
+2.37.3
+
