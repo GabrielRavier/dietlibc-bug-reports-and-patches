@@ -1,0 +1,45 @@
+From 66e294dc7b37d7eb9230ace501303f11e3790e54 Mon Sep 17 00:00:00 2001
+From: Gabriel Ravier <gabravier@gmail.com>
+Date: Thu, 22 Sep 2022 01:50:05 +0200
+Subject: [PATCH] Fix wcsncmp going past the end of the string if n is higher
+ than wcslen
+To: dietlibc@fefe.de
+
+The C standard states:
+> The wcsncmp function compares not more than n wide characters (**those**
+**that follow a null wide character are not compared**)
+
+dietlibc's implementation fails to do this, meaning that a program
+such as:
+
+int main()
+{
+    wchar_t a[] = L"test\0\1";
+    wchar_t b[] = L"test\0\2";
+
+    assert(wcsncmp(a, b, SIZE_MAX) == 0);
+}
+
+will abort on dietlibc, even though it should not.
+
+This patch fixes this by adding an explicit check to avoid going past
+the end of a string.
+---
+ dietlibc/lib/wcsncmp.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/dietlibc/lib/wcsncmp.c b/dietlibc/lib/wcsncmp.c
+index 6f113779..267087e4 100644
+--- a/dietlibc/lib/wcsncmp.c
++++ b/dietlibc/lib/wcsncmp.c
+@@ -2,6 +2,6 @@
+ 
+ int wcsncmp(const wchar_t *s1, const wchar_t *s2, size_t n) {
+   size_t i;
+-  for (i=0; i<n && s1[i]==s2[i]; ++i) ;
++  for (i=0; i<n && s1[i]==s2[i] && s1[i]!='\0'; ++i) ;
+   return s1[i]-s2[i];
+ }
+-- 
+2.37.3
+
