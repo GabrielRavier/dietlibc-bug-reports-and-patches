@@ -1,0 +1,49 @@
+From d55880abe5d348ef3e3282df5de46c49c4363eac Mon Sep 17 00:00:00 2001
+From: Gabriel Ravier <gabravier@gmail.com>
+Date: Wed, 28 Sep 2022 22:36:58 +0200
+Subject: [PATCH] fixed printf not taking printed characters into account when
+ precision is specified
+To: dietlibc@fefe.de
+
+A program such as:
+
+ #include <stdio.h>
+
+int main()
+{
+    printf("%20.5u", 1234567);
+}
+
+is mandated to output this:
+
+             1234567
+
+but dietlibc instead outputs this:
+
+               1234567
+
+seemingly assuming that if a precision is specified, then it will be
+the exact amount of characters that will be outputted for the argument
+iself, which is not the case here. This patch fixes this by always
+overriding the precision when the amount of characters in the
+converted argument is larger than it.
+---
+ dietlibc/lib/__v_printf.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/dietlibc/lib/__v_printf.c b/dietlibc/lib/__v_printf.c
+index d8204d12..12be94b2 100644
+--- a/dietlibc/lib/__v_printf.c
++++ b/dietlibc/lib/__v_printf.c
+@@ -251,7 +251,7 @@ print_out:
+ 	 */
+ 
+ 	if (flag_dot && width==0) width=preci;
+-	if (!flag_dot) preci=sz;
++	if (!flag_dot || sz>preci) preci=sz;
+ 	if (!flag_left && padwith==' ') { /* do left-side padding with spaces */
+ 	  if (write_pad(&len,fn,width-preci,padwith))
+ 	    return -1;
+-- 
+2.37.3
+

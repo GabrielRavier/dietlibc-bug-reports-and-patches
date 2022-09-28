@@ -1,0 +1,52 @@
+From 0123e76cd01bb7b6b36b9faa5eade9999f15cf94 Mon Sep 17 00:00:00 2001
+From: Gabriel Ravier <gabravier@gmail.com>
+Date: Wed, 28 Sep 2022 23:18:18 +0200
+Subject: [PATCH] fixed printf not ignoring the 0 flag when the - flag is used
+To: dietlibc@fefe.de
+
+The C standard states:
+
+> if the 0 and - flags both appear, the 0 flag is ignored
+
+However, dietlibc appears to fail to do as such, as a program such as:
+
+ #include <stdio.h>
+
+int main()
+{
+    printf("%0-5d", 42);
+}
+
+should print:
+
+42   
+
+(with 3 spaces at the end)
+
+but instead prints:
+
+42000
+
+on dietlibc.
+
+This patch fixes this by making it so that the padding character is
+overriden when finalizing the output if the - flag was specified.
+---
+ dietlibc/lib/__v_printf.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/dietlibc/lib/__v_printf.c b/dietlibc/lib/__v_printf.c
+index 12be94b2..6e13936a 100644
+--- a/dietlibc/lib/__v_printf.c
++++ b/dietlibc/lib/__v_printf.c
+@@ -271,6 +271,7 @@ print_out:
+ 	B_WRITE(fn,s,sz);
+ 	len+=sz;
+ 	if (flag_left) {
++          if (padwith=='0') padwith=' '; /* if the 0 and - flags both appear, the 0 flag is ignored */
+ 	  if (write_pad(&len,fn,width-preci,padwith))
+ 	    return -1;
+ 	}
+-- 
+2.37.3
+
