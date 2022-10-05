@@ -1,0 +1,86 @@
+Content-Type: multipart/alternative;
+ boundary="------------OCrGbGZnif2ktw0kztRuguIR"
+Message-ID: <3ee650f0-a44b-1065-0436-41800ee6ef14@gmail.com>
+Date: Wed, 5 Oct 2022 15:04:47 +0200
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.1
+Subject: Bug report: memchr is broken with large sizes
+Content-Language: en-US
+References: <1af479be-9f9a-638d-4298-29e90b5fb9d2@gmail.com>
+To: dietlibc@fefe.de
+From: Gabriel Ravier <gabravier@gmail.com>
+In-Reply-To: <1af479be-9f9a-638d-4298-29e90b5fb9d2@gmail.com>
+X-Forwarded-Message-Id: <1af479be-9f9a-638d-4298-29e90b5fb9d2@gmail.com>
+
+This is a multi-part message in MIME format.
+--------------OCrGbGZnif2ktw0kztRuguIR
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+
+Compiling and running the following program:
+
+#include <stdio.h>
+#include <string.h>
+#include <stdint.h>
+
+int main()
+{
+     char buf[] = "";
+     printf("%d\n", memchr(buf, '\0', SIZE_MAX) == buf);
+}
+
+on x86-64 results in dietlibc printing 0, whereas glibc prints 1. 
+glibc's output is the correct one, and the fact SIZE_MAX is larger than 
+the actual size of buf does not matter, as the standard states that:
+
+> The  implementation shall behave as if it reads the characters sequentially 
+and stops as soon as a matching character is found
+
+meaning the function should succeed and find the null terminator at the 
+beginning of buf, instead of returning NULL.
+
+--------------OCrGbGZnif2ktw0kztRuguIR
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+<html>
+  <head>
+
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  </head>
+  <body>
+    Compiling and running the following program:
+    <div class="moz-forward-container">
+      <p>#include &lt;stdio.h&gt;<br>
+        #include &lt;string.h&gt;<br>
+        #include &lt;stdint.h&gt;<br>
+        <br>
+        int main()<br>
+        {<br>
+            char buf[] = "";<br>
+            printf("%d\n", memchr(buf, '\0', SIZE_MAX) == buf);<br>
+        }<br>
+      </p>
+      <p>on x86-64 results in dietlibc printing 0, whereas glibc prints
+        1. glibc's output is the correct one, and the fact SIZE_MAX is
+        larger than the actual size of buf does not matter, as the
+        standard states that:</p>
+      <p><span style="left: 736.473px; top: 370.644px; font-size:
+          16.6043px; font-family: sans-serif; transform:
+          scaleX(0.959451);" role="presentation" dir="ltr">&gt; The
+          implementation shall behave as if it reads the characters
+          sequentially and stops as soon as a matching character is
+          found<br>
+        </span></p>
+      <p><span style="left: 736.473px; top: 370.644px; font-size:
+          16.6043px; font-family: sans-serif; transform:
+          scaleX(0.959451);" role="presentation" dir="ltr">meaning the
+          function should succeed and find the null terminator at the
+          beginning of buf, instead of returning NULL.<br>
+        </span></p>
+    </div>
+  </body>
+</html>
+
+--------------OCrGbGZnif2ktw0kztRuguIR--
