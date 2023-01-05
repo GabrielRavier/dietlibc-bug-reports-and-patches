@@ -1,0 +1,93 @@
+From 467a58448690f1785f43c63401199ed694d1d329 Mon Sep 17 00:00:00 2001
+From: Gabriel Ravier <gabravier@gmail.com>
+Date: Thu, 5 Jan 2023 19:53:59 +0100
+Subject: [PATCH] fix return value of wcs{,n}cmp for near-limits signed wchar_t
+ values
+To: dietlibc@fefe.de
+
+The standard states that:
+
+  > Unless explicitly stated otherwise, the functions described in
+    this subclause order two wide characters the same way as two
+    integers of the underlying integer type designated by `wchar_t`.
+  > [...]
+  > The `wcscmp` function returns an integer greater than, equal to,
+    or less than zero, accordingly as the wide string pointed to by s1
+    is greater than, equal to, or less than the wide string pointed to
+    by s2.
+  > The `wcsncmp` function returns an integer greater than, equal to,
+    or less than zero, accordingly as the possibly null-terminated
+    array pointed to by s1 is greater than, equal to, or less than the
+    possibly null-terminated array pointed to by s2
+  - N3047 (latest C draft as of the time of writing)
+
+Yet a simple test program such as this:
+
+    #include <wchar.h>
+    #include <stdio.h>
+
+    int main()
+    {
+        wchar_t str1[2] = { WCHAR_MAX, L'\0' };
+        wchar_t str2[2] = { WCHAR_MIN, L'\0' };
+
+        printf("%d\n", wcscmp(str1, str2));
+        printf("%d\n", wcsncmp(str1, str2, 1));
+    }
+
+Will fail to run correctly according to this specification on dietlibc (on
+targets that have signed wchar_t), as it will print -1 instead of
+1 (it should print 1, since WCHAR_MAX > WCHAR_MIN).
+
+This appears to be due to the fact that dietlibc uses a simple subtraction
+to implement wcscmp and wcsncmp, which may result in an overflow.
+
+This patch fixes this by replacing the subtraction with a little bit
+of code that orders the characters correctly, returning -1 if the
+character from the first string is smaller than the one from the
+second, 0 if they are equal and 1 if the character from the first
+string is larger than the one from the second
+
+Additionally, wcscnmp had an out-of-bounds bug that made it look at
+s1[n] and s2[n], even though the limit was reached and those
+characters should not be taken into account (as strncmp must return 0
+when n characters have been compared as equal)
+---
+ dietlibc/lib/wcscmp.c  | 3 ++-
+ dietlibc/lib/wcsncmp.c | 8 +++++++-
+ 2 files changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/dietlibc/lib/wcscmp.c b/dietlibc/lib/wcscmp.c
+index b5d10d75..00258436 100644
+--- a/dietlibc/lib/wcscmp.c
++++ b/dietlibc/lib/wcscmp.c
+@@ -3,7 +3,8 @@
+ int wcscmp(const wchar_t* a,const wchar_t* b) {
+   while (*a && *a == *b)
+     a++, b++;
+-  return (*a - *b);
++  // As subtraction may overflow, return instead -1, 0 or 1
++  return (*a > *b) - (*a < *b);
+ }
+ 
+ int wcscoll(const wchar_t *s,const wchar_t* t)       __attribute__((weak,alias("wcscmp")));
+diff --git a/dietlibc/lib/wcsncmp.c b/dietlibc/lib/wcsncmp.c
+index 936ce363..8979e160 100644
+--- a/dietlibc/lib/wcsncmp.c
++++ b/dietlibc/lib/wcsncmp.c
+@@ -3,5 +3,11 @@
+ int wcsncmp(const wchar_t *s1, const wchar_t *s2, size_t n) {
+   size_t i;
+   for (i=0; i<n && s1[i] && s1[i]==s2[i]; ++i) ;
+-  return s1[i]-s2[i];
++
++  // Using s1[i] and s2[i] now may result in an out of bounds read if we don't check this first
++  if (i==n)
++      return 0;
++
++  // As subtraction may overflow, return instead -1, 0 or 1
++  return (s1[i] > s2[i]) - (s1[i] < s2[i]);
+ }
+-- 
+2.38.1
+
