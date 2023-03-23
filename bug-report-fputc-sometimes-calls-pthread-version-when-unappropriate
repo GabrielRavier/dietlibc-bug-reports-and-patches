@@ -1,0 +1,118 @@
+Message-ID: <e7820be2-2c19-61ad-6c28-ffdd4194372e@gmail.com>
+Date: Thu, 23 Mar 2023 02:12:57 +0100
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Content-Language: en-US
+To: dietlibc@fefe.de
+From: Gabriel Ravier <gabravier@gmail.com>
+Subject: Bug report: fputc sometimes calls pthread version when unappropriate
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+
+The following program:
+
+#include <stdio.h>
+#include <assert.h>
+#include <stdbool.h>
+
+int main()
+{
+     FILE *fp = fopen("test.txt", "w");
+     assert(fp != NULL);
+     assert(fclose(fp) == 0);
+
+     fp = fopen("test.txt", "r");
+     assert(fp != NULL);
+     return fgetc(fp);
+}
+
+when compiled under dietlibc with something like `diet gcc -o dietlibc 
+test.c -lpthread`, will hang forever when ran.
+
+ From my investigation, this appears to occur after the following series 
+of events:
+
+- The `fclose` near the beginning, when freeing the memory for the file 
+pointer, will fill the bytes used for the allocations with a value of 0x55
+
+- The `fopen` call never sets the value of `fp->m` (the mutex for the 
+file stream) because it actually calls `fopen_unlocked`, like all the 
+other calls in this file
+
+- ...except for the call to `fgetc`, which somehow ends up calling the 
+implementation of `fgetc` from `libpthread/pthread_fgetc.c` ????
+
+- The `fgetc` call then attempts to lock the mutex but never manages to, 
+as `lock->__spinlock` is always set and nobody is ever going to unlock it
+
+
+The root cause of this appears to be the fact that the pthread version 
+of `fgetc` somehow gets linked into the executable, despite all the 
+others calls resolving to the `_unlocked` non-threading versions.
+
+
+Message-ID: <e500696a-598a-af20-097e-00fb90e2cfef@gmail.com>
+Date: Thu, 23 Mar 2023 02:15:46 +0100
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: Bug report: fputc sometimes calls pthread version when
+ unappropriate
+Content-Language: en-US
+From: Gabriel Ravier <gabravier@gmail.com>
+To: dietlibc@fefe.de
+References: <e7820be2-2c19-61ad-6c28-ffdd4194372e@gmail.com>
+In-Reply-To: <e7820be2-2c19-61ad-6c28-ffdd4194372e@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+
+On 3/23/23 02:12, Gabriel Ravier wrote:
+> The following program:
+>
+> #include <stdio.h>
+> #include <assert.h>
+> #include <stdbool.h>
+>
+> int main()
+> {
+>     FILE *fp = fopen("test.txt", "w");
+>     assert(fp != NULL);
+>     assert(fclose(fp) == 0);
+>
+>     fp = fopen("test.txt", "r");
+>     assert(fp != NULL);
+>     return fgetc(fp);
+> }
+>
+> when compiled under dietlibc with something like `diet gcc -o dietlibc 
+> test.c -lpthread`, will hang forever when ran.
+>
+> From my investigation, this appears to occur after the following 
+> series of events:
+>
+> - The `fclose` near the beginning, when freeing the memory for the 
+> file pointer, will fill the bytes used for the allocations with a 
+> value of 0x55
+>
+> - The `fopen` call never sets the value of `fp->m` (the mutex for the 
+> file stream) because it actually calls `fopen_unlocked`, like all the 
+> other calls in this file
+>
+> - ...except for the call to `fgetc`, which somehow ends up calling the 
+> implementation of `fgetc` from `libpthread/pthread_fgetc.c` ????
+>
+> - The `fgetc` call then attempts to lock the mutex but never manages 
+> to, as `lock->__spinlock` is always set and nobody is ever going to 
+> unlock it
+>
+>
+> The root cause of this appears to be the fact that the pthread version 
+> of `fgetc` somehow gets linked into the executable, despite all the 
+> others calls resolving to the `_unlocked` non-threading versions.
+>
+PS: to be clear, the reason `__spinlock` is set appears to be that the 
+memory used for the first `fopen` is re-used and that memory was set to 
+0x55 by the `free` call in `fclose`.
+
+
