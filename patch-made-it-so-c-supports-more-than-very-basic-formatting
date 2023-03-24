@@ -17,13 +17,13 @@ Previously, dietlibc would simply not print anything more complicated than %c co
 
 This patch makes an initial implementation of such characteristics that passes all the tests I put it through (though my C testsuite isn't *that* big as of yet, but still, it looks like implementing %c like this works out pretty well).
 ---
- dietlibc/lib/__v_printf.c | 10 +++++++---
+ lib/__v_printf.c | 10 +++++++---
  1 file changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/dietlibc/lib/__v_printf.c b/dietlibc/lib/__v_printf.c
+diff --git a/lib/__v_printf.c b/lib/__v_printf.c
 index f2456855..2a8cab61 100644
---- a/dietlibc/lib/__v_printf.c
-+++ b/dietlibc/lib/__v_printf.c
+--- a/lib/__v_printf.c
++++ b/lib/__v_printf.c
 @@ -169,10 +169,14 @@ inn_printf:
  	if (preci>MAX_WIDTH) return -1;
  	goto inn_printf;

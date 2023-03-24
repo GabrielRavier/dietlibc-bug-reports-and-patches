@@ -9,13 +9,13 @@ modifier and then moving it to be analogous to j/l), which makes it so
 that something like printf("%#x", 0x1234abcd) prints 0xabcd instead of
 the full 0x1234abcd
 ---
- dietlibc/lib/__v_printf.c | 2 +-
+ lib/__v_printf.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/dietlibc/lib/__v_printf.c b/dietlibc/lib/__v_printf.c
+diff --git a/lib/__v_printf.c b/lib/__v_printf.c
 index 37238b3e..e7cccef1 100644
---- a/dietlibc/lib/__v_printf.c
-+++ b/dietlibc/lib/__v_printf.c
+--- a/lib/__v_printf.c
++++ b/lib/__v_printf.c
 @@ -83,7 +83,7 @@ inn_printf:
        /* FLAGS */
        case '#':

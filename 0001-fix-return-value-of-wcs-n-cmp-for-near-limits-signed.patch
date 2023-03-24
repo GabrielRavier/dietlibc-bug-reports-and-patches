@@ -53,14 +53,14 @@ s1[n] and s2[n], even though the limit was reached and those
 characters should not be taken into account (as strncmp must return 0
 when n characters have been compared as equal)
 ---
- dietlibc/lib/wcscmp.c  | 3 ++-
- dietlibc/lib/wcsncmp.c | 8 +++++++-
+ lib/wcscmp.c  | 3 ++-
+ lib/wcsncmp.c | 8 +++++++-
  2 files changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/dietlibc/lib/wcscmp.c b/dietlibc/lib/wcscmp.c
+diff --git a/lib/wcscmp.c b/lib/wcscmp.c
 index b5d10d75..00258436 100644
---- a/dietlibc/lib/wcscmp.c
-+++ b/dietlibc/lib/wcscmp.c
+--- a/lib/wcscmp.c
++++ b/lib/wcscmp.c
 @@ -3,7 +3,8 @@
  int wcscmp(const wchar_t* a,const wchar_t* b) {
    while (*a && *a == *b)
@@ -71,10 +71,10 @@ index b5d10d75..00258436 100644
  }
  
  int wcscoll(const wchar_t *s,const wchar_t* t)       __attribute__((weak,alias("wcscmp")));
-diff --git a/dietlibc/lib/wcsncmp.c b/dietlibc/lib/wcsncmp.c
+diff --git a/lib/wcsncmp.c b/lib/wcsncmp.c
 index 936ce363..8979e160 100644
---- a/dietlibc/lib/wcsncmp.c
-+++ b/dietlibc/lib/wcsncmp.c
+--- a/lib/wcsncmp.c
++++ b/lib/wcsncmp.c
 @@ -3,5 +3,11 @@
  int wcsncmp(const wchar_t *s1, const wchar_t *s2, size_t n) {
    size_t i;

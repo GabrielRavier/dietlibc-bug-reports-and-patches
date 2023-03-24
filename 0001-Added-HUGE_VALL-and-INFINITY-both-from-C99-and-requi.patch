@@ -5,13 +5,13 @@ Subject: [PATCH] Added HUGE_VALL and INFINITY, both from C99 and required for
  compliance to it
 
 ---
- dietlibc/include/math.h | 2 ++
+ include/math.h | 2 ++
  1 file changed, 2 insertions(+)
 
-diff --git a/dietlibc/include/math.h b/dietlibc/include/math.h
+diff --git a/include/math.h b/include/math.h
 index 8027e22b..735b71f1 100644
---- a/dietlibc/include/math.h
-+++ b/dietlibc/include/math.h
+--- a/include/math.h
++++ b/include/math.h
 @@ -131,6 +131,8 @@ float copysignf(float value, float sign) __attribute__((__const__));
    (__extension__ \
     ((union { unsigned int __i; float __f; }) \

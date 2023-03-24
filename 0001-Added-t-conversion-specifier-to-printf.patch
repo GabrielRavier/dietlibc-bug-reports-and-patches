@@ -14,13 +14,13 @@ This patch accordingly implements this (with the hopefully accurate
 assumption that sizeof(ptrdiff_t) == sizeof(size_t)) and makes it so software
 relying on this flag works properly
 ---
- dietlibc/lib/__v_printf.c | 1 +
+ lib/__v_printf.c | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/dietlibc/lib/__v_printf.c b/dietlibc/lib/__v_printf.c
+diff --git a/lib/__v_printf.c b/lib/__v_printf.c
 index 536e837e..f2456855 100644
---- a/dietlibc/lib/__v_printf.c
-+++ b/dietlibc/lib/__v_printf.c
+--- a/lib/__v_printf.c
++++ b/lib/__v_printf.c
 @@ -102,6 +102,7 @@ inn_printf:
        case 'j':
  #endif

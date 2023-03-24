@@ -21,13 +21,13 @@ This change makes it so that smaller types than int have their values
 correctly sign-extended, which is especially important for SHRT_MIN
 and SCHAR_MIN.
 ---
- dietlibc/lib/__v_printf.c | 4 ++++
+ lib/__v_printf.c | 4 ++++
  1 file changed, 4 insertions(+)
 
-diff --git a/dietlibc/lib/__v_printf.c b/dietlibc/lib/__v_printf.c
+diff --git a/lib/__v_printf.c b/lib/__v_printf.c
 index e7cccef1..536e837e 100644
---- a/dietlibc/lib/__v_printf.c
-+++ b/dietlibc/lib/__v_printf.c
+--- a/lib/__v_printf.c
++++ b/lib/__v_printf.c
 @@ -319,6 +319,10 @@ num_printf:
  	}
  	else {

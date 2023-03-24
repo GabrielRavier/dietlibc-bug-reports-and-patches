@@ -25,13 +25,13 @@ will abort on dietlibc, even though it should not.
 This patch fixes this by adding an explicit check to avoid going past
 the end of a string.
 ---
- dietlibc/lib/wcsncmp.c | 2 +-
+ lib/wcsncmp.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/dietlibc/lib/wcsncmp.c b/dietlibc/lib/wcsncmp.c
+diff --git a/lib/wcsncmp.c b/lib/wcsncmp.c
 index 6f113779..267087e4 100644
---- a/dietlibc/lib/wcsncmp.c
-+++ b/dietlibc/lib/wcsncmp.c
+--- a/lib/wcsncmp.c
++++ b/lib/wcsncmp.c
 @@ -2,6 +2,6 @@
  
  int wcsncmp(const wchar_t *s1, const wchar_t *s2, size_t n) {

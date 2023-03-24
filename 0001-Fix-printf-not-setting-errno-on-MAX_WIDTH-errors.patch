@@ -10,13 +10,13 @@ to ENOMEM.
 
 This patch makes it so that this is the case
 ---
- dietlibc/lib/__v_printf.c | 15 ++++++++++++---
+ lib/__v_printf.c | 15 ++++++++++++---
  1 file changed, 12 insertions(+), 3 deletions(-)
 
-diff --git a/dietlibc/lib/__v_printf.c b/dietlibc/lib/__v_printf.c
+diff --git a/lib/__v_printf.c b/lib/__v_printf.c
 index f130da9b..29c610bb 100644
---- a/dietlibc/lib/__v_printf.c
-+++ b/dietlibc/lib/__v_printf.c
+--- a/lib/__v_printf.c
++++ b/lib/__v_printf.c
 @@ -137,7 +137,10 @@ inn_printf:
        case '9':
  	if(flag_dot) return -1;

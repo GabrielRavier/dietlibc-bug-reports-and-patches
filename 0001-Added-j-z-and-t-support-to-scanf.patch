@@ -22,13 +22,13 @@ This patch accordingly implements these (with the same #if tests as
 done in __v_printf.c) and makes it so software relying on these flags works
 properly
 ---
- dietlibc/lib/__v_scanf.c | 8 ++++++++
+ lib/__v_scanf.c | 8 ++++++++
  1 file changed, 8 insertions(+)
 
-diff --git a/dietlibc/lib/__v_scanf.c b/dietlibc/lib/__v_scanf.c
+diff --git a/lib/__v_scanf.c b/lib/__v_scanf.c
 index bdb7c5a1..5540d26f 100644
---- a/dietlibc/lib/__v_scanf.c
-+++ b/dietlibc/lib/__v_scanf.c
+--- a/lib/__v_scanf.c
++++ b/lib/__v_scanf.c
 @@ -85,10 +85,18 @@ in_scan:
  	case 'h':
  	  flag_half=1;

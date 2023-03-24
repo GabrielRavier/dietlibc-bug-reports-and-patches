@@ -19,13 +19,13 @@ int main()
 
 Which would previously print 3, but now print 2.718282, as is mandated by the standard
 ---
- dietlibc/lib/__v_printf.c | 2 ++
+ lib/__v_printf.c | 2 ++
  1 file changed, 2 insertions(+)
 
-diff --git a/dietlibc/lib/__v_printf.c b/dietlibc/lib/__v_printf.c
+diff --git a/lib/__v_printf.c b/lib/__v_printf.c
 index bb3aa88a..f901f817 100644
---- a/dietlibc/lib/__v_printf.c
-+++ b/dietlibc/lib/__v_printf.c
+--- a/lib/__v_printf.c
++++ b/lib/__v_printf.c
 @@ -154,6 +154,8 @@ inn_printf:
  	if (*format=='*') {
  	  int tmp=va_arg(arg_ptr,int);

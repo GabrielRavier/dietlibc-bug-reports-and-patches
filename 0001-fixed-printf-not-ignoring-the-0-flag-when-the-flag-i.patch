@@ -32,13 +32,13 @@ on dietlibc.
 This patch fixes this by making it so that the padding character is
 overriden when finalizing the output if the - flag was specified.
 ---
- dietlibc/lib/__v_printf.c | 1 +
+ lib/__v_printf.c | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/dietlibc/lib/__v_printf.c b/dietlibc/lib/__v_printf.c
+diff --git a/lib/__v_printf.c b/lib/__v_printf.c
 index 12be94b2..6e13936a 100644
---- a/dietlibc/lib/__v_printf.c
-+++ b/dietlibc/lib/__v_printf.c
+--- a/lib/__v_printf.c
++++ b/lib/__v_printf.c
 @@ -271,6 +271,7 @@ print_out:
  	B_WRITE(fn,s,sz);
  	len+=sz;

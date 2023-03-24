@@ -31,13 +31,13 @@ on my machine, instead of
 This patch fixes this by storing into longs, which should hopefully
 work on all dietlibc platforms
 ---
- dietlibc/lib/__v_scanf.c | 2 ++
+ lib/__v_scanf.c | 2 ++
  1 file changed, 2 insertions(+)
 
-diff --git a/dietlibc/lib/__v_scanf.c b/dietlibc/lib/__v_scanf.c
+diff --git a/lib/__v_scanf.c b/lib/__v_scanf.c
 index 5540d26f..64e50b4a 100644
---- a/dietlibc/lib/__v_scanf.c
-+++ b/dietlibc/lib/__v_scanf.c
+--- a/lib/__v_scanf.c
++++ b/lib/__v_scanf.c
 @@ -120,6 +120,8 @@ in_scan:
  
  	/* scan for integer / strtol reimplementation ... */

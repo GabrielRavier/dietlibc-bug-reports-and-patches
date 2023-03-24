@@ -28,13 +28,13 @@ iself, which is not the case here. This patch fixes this by always
 overriding the precision when the amount of characters in the
 converted argument is larger than it.
 ---
- dietlibc/lib/__v_printf.c | 2 +-
+ lib/__v_printf.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/dietlibc/lib/__v_printf.c b/dietlibc/lib/__v_printf.c
+diff --git a/lib/__v_printf.c b/lib/__v_printf.c
 index d8204d12..12be94b2 100644
---- a/dietlibc/lib/__v_printf.c
-+++ b/dietlibc/lib/__v_printf.c
+--- a/lib/__v_printf.c
++++ b/lib/__v_printf.c
 @@ -251,7 +251,7 @@ print_out:
  	 */
  
