@@ -1,0 +1,46 @@
+From 39660a52c4abdf779866ee2fd218ee0208a755c3 Mon Sep 17 00:00:00 2001
+From: Gabriel Ravier <gabravier@gmail.com>
+Date: Sat, 25 Mar 2023 01:33:12 +0100
+Subject: [PATCH] Fix printing alternative form hex 0 in printf-family
+ functions
+To: dietlibc@fefe.de
+
+The C standard states, that, for the # flag character of printf-family functions:
+> The result is converted to an "alternative form". [...] For x (or X)
+> conversion, a **nonzero** result has 0x (or 0X) prefixed to it.
+- The C Standard, 7.23.6.1.6. The fprintf function
+
+Even though the standard states that the prefixing of 0x only occurs
+when the result is non-0, dietlibc's implementation fails to do this,
+meaning that a program such as:
+
+ #include <stdio.h>
+
+int main()
+{
+    printf("%#X\n", 0);
+}
+
+will print "0x0" on dietlibc, instead of the correct behavior of
+printing "0".
+
+This patch fixes this by adding an explicit check for this situation.
+---
+ lib/__v_printf.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/lib/__v_printf.c b/lib/__v_printf.c
+index 6e13936a..7273f473 100644
+--- a/lib/__v_printf.c
++++ b/lib/__v_printf.c
+@@ -355,6 +355,7 @@ num_printf:
+ 	}
+ 	if (flag_long<0) number&=0xffff;
+ 	if (flag_long<-1) number&=0xff;
++        if (number == 0 && flag_hash == 2 && sz >= 2) sz-=2; /* When 0 is printed with the alternative form, the output does not contain a 0x */
+ #ifdef WANT_LONGLONG_PRINTF
+ 	if (flag_long>1)
+ 	  retval = __lltostr(s+sz,sizeof(buf)-5,(unsigned long long) llnumber,base,flag_upcase);
+-- 
+2.39.2
+
