@@ -1,0 +1,29 @@
+From b28013c9570fdbc5c0e1eb66268f93fe1aade88d Mon Sep 17 00:00:00 2001
+From: Gabriel Ravier <gabravier@gmail.com>
+Date: Thu, 4 Jul 2024 03:14:41 +0200
+Subject: [PATCH] Add NAN to math.h, as required by C99
+To: dietlibc@fefe.de
+
+This relies on GCC, but I assume that's fine given even the previous
+line does as much (and I do not otherwise know of a
+standards-conforming way to do this - something like
+`((float)0.0/0.0)` could/would raise SIGFPE)
+---
+ include/math.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/include/math.h b/include/math.h
+index 8027e22b..2af0747c 100644
+--- a/include/math.h
++++ b/include/math.h
+@@ -131,6 +131,7 @@ float copysignf(float value, float sign) __attribute__((__const__));
+   (__extension__ \
+    ((union { unsigned int __i; float __f; }) \
+     { __i: 0x7f800000UL }).__f)
++#define NAN (__builtin_nanf(""))
+ 
+ #ifdef _GNU_SOURCE
+ void sincos(double x, double* sinx, double* cosx);
+-- 
+2.45.2
+
