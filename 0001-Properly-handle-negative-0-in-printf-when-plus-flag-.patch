@@ -1,0 +1,52 @@
+From ccffa1e762372bfc8e9e145caca75d318ae024a0 Mon Sep 17 00:00:00 2001
+From: Gabriel Ravier <gabravier@gmail.com>
+Date: Sun, 7 Jul 2024 10:45:36 +0200
+Subject: [PATCH] Properly handle negative 0 in printf when plus flag character
+ is used
+To: dietlibc@fefe.de
+
+The C standard states that, when the `+` flag character is used in
+printf:
+> The result of a signed conversion always begins with a plus **or**
+> minus sign.
+- The C Standard, 7.23.6.1.6. The fprintf function
+
+Even though the standard is clear that only a single plus or a single
+minus (and not both) must be printed by printf, dietlibc's
+implementation fails to do this for floating point numbers when a
+negative zero is used, meaning a program such as:
+
+ #include <stdio.h>
+
+int main()
+{
+    printf("%+f\n", -0.);
+}
+
+will print "+-0.00000" instead of the correct behavior of printing
+"-0.000000".
+
+This patch fixes this by adding an explicit check for a negative zero
+when a plus is about to be prefixed to the output, as in that case a
+minus was already previously added by __dtostr, meaning the plus
+should not be added.
+---
+ lib/__v_printf.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/__v_printf.c b/lib/__v_printf.c
+index 787d60bb..318ec1b7 100644
+--- a/lib/__v_printf.c
++++ b/lib/__v_printf.c
+@@ -433,7 +433,7 @@ num_printf:
+ 	      }
+ 	    }
+ 	  
+-	    if ((flag_sign || flag_space) && d>=0) {
++	    if ((flag_sign || flag_space) && d>=0 && (1/d != 1/-0.)) { /* 1/d != 1/-0. checks for d being negative 0, in which case we don't want to add a plus since __dtostr will already have added a minus */
+ 	      *(--s)=(flag_sign)?'+':' ';
+ 	      ++sz;
+ 	    }
+-- 
+2.45.2
+
