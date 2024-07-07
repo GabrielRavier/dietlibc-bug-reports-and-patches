@@ -1,0 +1,71 @@
+From ff7ccb69fefb2ce0cccdacb588d3b17d8c01c229 Mon Sep 17 00:00:00 2001
+From: Gabriel Ravier <gabravier@gmail.com>
+Date: Sat, 25 Mar 2023 01:33:12 +0100
+Subject: [PATCH] Fix printing 0 in the alternative form in printf-family
+ functions
+To: dietlibc@fefe.de
+
+The C standard states, that, for the # flag character of printf-family functions:
+> The result is converted to an "alternative form". For o conversion,
+> it increases the precision, **if and only if necessary**, to force the
+> first digit of the result to be a zero (if the value and precision
+> are both 0, **a single 0 is printed**) [...] For x (or X) conversion,
+> a **nonzero** result has 0x (or 0X) prefixed to it.
+- The C Standard, 7.23.6.1.6. The fprintf function
+
+Even though the standard states that the prefixing of 0 or 0x only
+occurs, respectively, when necessary or when printing 0, dietlibc's
+implementation fails to do this, meaning that a program such as:
+
+ #include <stdio.h>
+
+int main()
+{
+    printf("%#1x\n", 0);
+    printf("%#X\n", 0);
+    printf("%#o\n", 0);
+}
+
+will print:
+
+0x0
+0X0
+00
+
+on dietlibc, instead of the correct behavior of
+printing:
+
+0
+0
+0
+
+This patch fixes this by adding an explicit check for this situation
+and simply handling it as though the alternative form was not used at
+all if the input was 0.
+---
+ lib/__v_printf.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/lib/__v_printf.c b/lib/__v_printf.c
+index 6e13936a..787d60bb 100644
+--- a/lib/__v_printf.c
++++ b/lib/__v_printf.c
+@@ -355,6 +355,15 @@ num_printf:
+ 	}
+ 	if (flag_long<0) number&=0xffff;
+ 	if (flag_long<-1) number&=0xff;
++
++	/* When the alternative form and the x conversion specifier are used to print a 0, the output does not contain a 0x.
++	   Similarly, when the alternative form and the o conversion specifier are used to print a 0, the output only contains a single 0, and not two.
++	   In other words, printing 0 with the alternative form effectively outputs the same as if the alternative form was not used.
++	   We also reset sz to 0 to undo the sz = 2 or ++sz done above */
++        if (number == 0 && flag_hash) {
++	  flag_hash = 0;
++	  sz = 0;
++	}
+ #ifdef WANT_LONGLONG_PRINTF
+ 	if (flag_long>1)
+ 	  retval = __lltostr(s+sz,sizeof(buf)-5,(unsigned long long) llnumber,base,flag_upcase);
+-- 
+2.45.2
+
