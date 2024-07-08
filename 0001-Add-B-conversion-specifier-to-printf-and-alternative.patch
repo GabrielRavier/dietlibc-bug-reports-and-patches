@@ -1,0 +1,43 @@
+From ba0adeb1f606b4f6681401b94b66a301983db985 Mon Sep 17 00:00:00 2001
+From: Gabriel Ravier <gabravier@gmail.com>
+Date: Mon, 8 Jul 2024 02:43:00 +0200
+Subject: [PATCH] Add B conversion specifier to printf and alternative form for
+ b and B
+To: dietlibc@fefe.de
+
+This patch implements the B conversion specifier to printf as
+specified in the C standard, and changes the behavior of the b
+conversion specifier to conform to the C standard, in particular by
+handling the alternative form (i.e. prefixing `0b` or `0B` when the
+`#` flag is used).
+---
+ lib/__v_printf.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/lib/__v_printf.c b/lib/__v_printf.c
+index 25f10e57..f029f9c4 100644
+--- a/lib/__v_printf.c
++++ b/lib/__v_printf.c
+@@ -281,9 +281,9 @@ print_out:
+ 
+       /* print an integer value */
+       case 'b':
++      case 'B':
+ 	base=2;
+-	sz=0;
+-	goto num_printf;
++	goto case_x_after_set_base_to_16;
+       case 'p':
+ 	flag_hash=2;
+ 	flag_long=1;
+@@ -294,6 +294,7 @@ print_out:
+ 	/* fall through */
+       case 'x':
+ 	base=16;
++      case_x_after_set_base_to_16:
+ 	sz=0;
+ 	if (flag_hash) {
+ 	  buf[1]='0';
+-- 
+2.45.2
+

@@ -1,0 +1,46 @@
+From ca2ffb5b85c1fbf2dea6a7c094d8fab63de0bcb8 Mon Sep 17 00:00:00 2001
+From: Gabriel Ravier <gabravier@gmail.com>
+Date: Mon, 8 Jul 2024 01:42:20 +0200
+Subject: [PATCH] Fix printf not ignoring 0 flag when precision is specified on
+ numeric conversions
+To: dietlibc@fefe.de
+
+The C standard states:
+> For b, B, d, i, o, u, x, and X conversions, if a precision is
+> specified, the 0 flag is ignored.
+- C Standard, 7.23.6.1.6. The fprintf function
+
+Dietlibc fails to ignore the 0 flag in this situation, meaning a
+program such as:
+
+ #include <stdio.h>
+
+int main()
+{
+    printf("%04.3d\n", 42);
+}
+
+prints "0042" instead of " 042", as the standard specifies.
+
+This patch fixes this by adding a check for this situation when we're
+handling a numeric conversion (this covers every conversion specifier
+that the C standard mandates this happen for).
+---
+ lib/__v_printf.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/lib/__v_printf.c b/lib/__v_printf.c
+index 318ec1b7..25f10e57 100644
+--- a/lib/__v_printf.c
++++ b/lib/__v_printf.c
+@@ -323,6 +323,7 @@ print_out:
+ num_printf:
+ 	s=buf+1;
+ 
++	if ((padwith=='0')&&flag_dot) padwith=' '; /* for b, B, d, i, o, u, x and X conversions, if a precision is specified, the 0 flag is ignored */
+ 	if (flag_long>0) {
+ #ifdef WANT_LONGLONG_PRINTF
+ 	  if (flag_long>1)
+-- 
+2.45.2
+
