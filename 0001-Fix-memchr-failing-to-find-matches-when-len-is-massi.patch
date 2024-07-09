@@ -1,0 +1,79 @@
+From 0d6b44e0e1d0b845235c538ea5dcd0c54ec95bf4 Mon Sep 17 00:00:00 2001
+From: Gabriel Ravier <gabravier@gmail.com>
+Date: Tue, 9 Jul 2024 15:53:49 +0200
+Subject: [PATCH] Fix memchr failing to find matches when len is massive
+To: dietlibc@fefe.de
+
+The C standard states:
+> The memchr generic function locates the first occurrence of
+> c (converted to an unsigned char) in the initial n characters (each
+> interpreted as unsigned char) of the object pointed to by s. The
+> implementation shall behave **as if it reads the characters**
+> *sequentially and stops as soon as a matching character is found.**
+- C Standard, 7.26.5.2.2. The memchr generic function
+
+This means that using a very large length (e.g. SIZE_MAX) is valid, so
+long as the passed object contains the searched character.
+
+However, dietlibc doesn't handle this case properly on x86-64, as an
+addition overflows and the routine then malfunctions (effectively
+always thinks there is no match in such a case). This also makes other
+routines that rely on memchr, such as strnlen, malfunction in a
+similar way.
+
+This means a program such as:
+
+ #include <string.h>
+ #include <stdio.h>
+ #include <stdint.h>
+
+int main()
+{
+    const char *p = "";
+    const char *result = memchr(p, 0, SIZE_MAX);
+
+    if (result)
+        printf("%zu\n", result - p);
+    else
+        printf("(null)\n");
+    printf("%zu\n", strnlen(p, SIZE_MAX));
+}
+
+would print "(null)" and "18446744073709551615" (SIZE_MAX) instead of
+"0" twice, as the standard specifies.
+
+This patch fixes this by making it so that if an overflow occurs,
+memchr will search for the character indefinitely.
+---
+ x86_64/memchr.S | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/x86_64/memchr.S b/x86_64/memchr.S
+index 6a49b435..d80b06ba 100644
+--- a/x86_64/memchr.S
++++ b/x86_64/memchr.S
+@@ -25,7 +25,20 @@ memchr:	/* rdi=ptr, esi=ch, rdx=len */
+   mov %rdi,%rcx
+   and $15,%ecx
+   movd %esi,%xmm0
+-  lea (%rdi,%rdx),%rsi	/* rsi = max ptr */
++
++  /*
++    rsi = max ptr
++    we check for overflow (i.e. rdi + rdx < rdi) to avoid issues when len is massive
++    (which is valid so long as ch is present before the real size of the buffer is reached.
++    if there is an overflow, we use -1/0xffffffffffffffff,
++    to ensure we won't stop until we find a match
++    (note: objects can't wrap around address space,
++     and in practice x86-64 is limited to 48 bits of significance in address space anyway)
++  */
++  add %rdi, %rdx        /* first do raw addition in rdx (we don't use it later so we can safely trash it here - we don't use lea since we want to check the flags with cmovnc */
++  mov $-1, %rsi         /* backup result if addition overflowed */
++  cmovnc %rdx, %rsi     /* if we didn't overflow, use the addition result - otherwise we'll keep going with our backup result */
++
+   and $~15,%rdi		/* 16-align rdi, diff in cl */
+   or $-1,%eax
+   shl %cl,%eax
+-- 
+2.45.2
+
