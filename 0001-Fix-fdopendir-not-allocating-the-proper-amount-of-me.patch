@@ -1,0 +1,35 @@
+From 1a0d1d9d420b58d93e8126e4640c7c41be0d0630 Mon Sep 17 00:00:00 2001
+From: Gabriel Ravier <gabravier@gmail.com>
+Date: Tue, 9 Jul 2024 04:10:16 +0200
+Subject: [PATCH] Fix fdopendir not allocating the proper amount of memory
+To: dietlibc@fefe.de
+
+DIRs are of a size of DIRSTREAMSIZE, but fdopendir only allocates a
+buffer of size PAGE_SIZE for it, which is not big enough if PAGE_SIZE
+is 4096 (e.g. on x86). In practice, this would usually manifest in the
+form of random crashes when using readdir or after using
+closedir (because it would end up unmapping some random memory located
+after the DIR).
+
+This patch fixes this by fixing the size that fdopendir allocates for
+the DIR.
+---
+ lib/fdopendir.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/fdopendir.c b/lib/fdopendir.c
+index daa1f6ab..daf56fae 100644
+--- a/lib/fdopendir.c
++++ b/lib/fdopendir.c
+@@ -9,7 +9,7 @@ DIR*  fdopendir ( int fd ) {
+   DIR*  t  = NULL;
+ 
+   if ( fd >= 0 ) {
+-    t = (DIR *) mmap (NULL, PAGE_SIZE, PROT_READ | PROT_WRITE, 
++    t = (DIR *) mmap (NULL, DIRSTREAMSIZE, PROT_READ | PROT_WRITE,
+ 		MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+     if (t != MAP_FAILED)
+       t->fd = fd;
+-- 
+2.45.2
+
