@@ -1,0 +1,39 @@
+From cbec4c3bc9c619fb10b200bc28d8c3def61c9a4a Mon Sep 17 00:00:00 2001
+From: Gabriel Ravier <gabravier@gmail.com>
+Date: Sun, 15 Sep 2024 17:10:27 +0200
+Subject: [PATCH] Fix single-argument static_assert not working
+To: dietlibc@fefe.de
+
+The C standard specifies static_assert as taking either one or two
+arguments, but dietlibc currently fails to handle the case where only
+one argument is given, erroring as it defines static_assert as a
+function-like macro that always takes two arguments
+
+This patch fixes this by instead defining static_assert to directly
+redirect to _Static_assert (without being a function-like macro) to
+allow _Static_assert to handle this case (this also allows the
+compiler to be the one to handle the differences between the older
+pre-C23 standards that don't allow 1-argument and standards starting
+with C23 which do so.
+---
+ include/assert.h | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/include/assert.h b/include/assert.h
+index 450247bf..32043e2f 100644
+--- a/include/assert.h
++++ b/include/assert.h
+@@ -40,7 +40,9 @@ extern void __assert_fail (const char *__assertion, const char *__file,
+ 
+ #if __STDC_VERSION__ >= 201112L
+ // _Static_assert is only defined in C11 :-(
+-#define static_assert(cond,errmsg) _Static_assert(cond,errmsg)
++// Note that we do not define static_assert as a function-like macro,
++// as the amount of arguments taken by static_assert is variable starting with C23
++#define static_assert _Static_assert
+ #else
+ 
+ #define __X(x, y) x ## y
+-- 
+2.46.0
+
